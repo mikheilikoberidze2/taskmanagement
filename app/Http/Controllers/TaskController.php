@@ -13,6 +13,7 @@ use App\Services\TaskService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class TaskController extends Controller
 {
@@ -29,8 +30,15 @@ class TaskController extends Controller
      */
     public function index()
     {
-            $task = Task::all();
-            return TaskResource::collection($task);
+        $tasks = Redis::get('tasks');
+        $tasks = json_decode($tasks);
+
+        if (!$tasks) {
+            $tasks = Task::all();
+            Redis::set('tasks', $tasks);
+        }
+
+        return TaskResource::collection($tasks);
     }
 
     /**
